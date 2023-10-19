@@ -12,10 +12,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-//Conexion con Postgres
-var connectionString = builder.Configuration.GetConnectionString("PostgreSQLConnection");
 builder.Services.AddDbContext<AseguradoraContext>(options =>
-    options.UseNpgsql(connectionString));
+
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MysqlConnection"))
+);
 
 
 var app = builder.Build();
