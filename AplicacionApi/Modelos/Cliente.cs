@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace AplicacionApi.Modelos
 {
@@ -16,7 +17,8 @@ namespace AplicacionApi.Modelos
         public int Edad { get; set; }
 
         // Lista de seguros asociados al cliente
-        public List<Seguro> Seguros { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Seguro> Seguros{ get; set; }
 
 
     }

@@ -2,17 +2,17 @@
 using AplicacionApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace AplicacionApi.Migrations
 {
     [DbContext(typeof(AseguradoraContext))]
-    [Migration("20231019200603_InitDb")]
-    partial class InitDb
+    [Migration("20231021172951_InitialCreate3")]
+    partial class InitialCreate3
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,25 +20,25 @@ namespace AplicacionApi.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.12")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("AplicacionApi.Modelos.Cliente", b =>
                 {
                     b.Property<string>("Cedula")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<int>("Edad")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Telefono")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Cedula");
 
@@ -49,16 +49,13 @@ namespace AplicacionApi.Migrations
                 {
                     b.Property<int>("Codigo")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Codigo"));
-
-                    b.Property<string>("ClienteCedula")
-                        .HasColumnType("nvarchar(450)");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Codigo"));
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<float>("Prima")
                         .HasColumnType("real");
@@ -68,21 +65,37 @@ namespace AplicacionApi.Migrations
 
                     b.HasKey("Codigo");
 
-                    b.HasIndex("ClienteCedula");
-
                     b.ToTable("Seguros");
                 });
 
-            modelBuilder.Entity("AplicacionApi.Modelos.Seguro", b =>
+            modelBuilder.Entity("ClienteSeguro", b =>
                 {
-                    b.HasOne("AplicacionApi.Modelos.Cliente", null)
-                        .WithMany("Seguros")
-                        .HasForeignKey("ClienteCedula");
+                    b.Property<string>("ClientesCedula")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SegurosCodigo")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ClientesCedula", "SegurosCodigo");
+
+                    b.HasIndex("SegurosCodigo");
+
+                    b.ToTable("ClienteSeguro");
                 });
 
-            modelBuilder.Entity("AplicacionApi.Modelos.Cliente", b =>
+            modelBuilder.Entity("ClienteSeguro", b =>
                 {
-                    b.Navigation("Seguros");
+                    b.HasOne("AplicacionApi.Modelos.Cliente", null)
+                        .WithMany()
+                        .HasForeignKey("ClientesCedula")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AplicacionApi.Modelos.Seguro", null)
+                        .WithMany()
+                        .HasForeignKey("SegurosCodigo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

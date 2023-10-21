@@ -1,6 +1,8 @@
 ﻿
 
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AplicacionApi.Modelos
 {
@@ -14,5 +16,8 @@ namespace AplicacionApi.Modelos
         
         public float Prima { get; set; }
 
+
+        [JsonIgnore]
+        public virtual ICollection<Cliente> Clientes { get; set; }
     }
 }
