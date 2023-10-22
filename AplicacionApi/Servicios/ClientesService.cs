@@ -2,6 +2,11 @@
 using AplicacionApi.DTO;
 using AplicacionApi.Interfaces;
 using AplicacionApi.Modelos;
+using CsvHelper;
+using CsvHelper.Configuration;
+using Microsoft.EntityFrameworkCore;
+using System.Formats.Asn1;
+using System.Globalization;
 
 namespace AplicacionApi.Servicios
 {
@@ -149,6 +154,152 @@ namespace AplicacionApi.Servicios
                 return seguro;
             }
         }
+
+
+        public Seguro ActualizarSeguro(int codigo, SeguroDto seguro)
+        {
+            //Verificamos que se encuentre el seguro en la base de datos
+            var seguroExistente = _context.Seguros.Find(codigo);
+            if (seguroExistente == null)
+            {
+                throw new System.Exception("El seguro no existe");
+            }
+
+            seguroExistente.Nombre = seguro.Nombre;
+            seguroExistente.SumaAsegurada = seguro.SumaAsegurada;
+            seguroExistente.Prima = seguro.Prima;
+
+            _context.Seguros.Update(seguroExistente);
+            _context.SaveChanges();
+
+            return seguroExistente;
+        }
+
+
+        public Seguro EliminarSeguro(int codigo)
+        {
+            //Verificamos que se encuentre el seguro en la base de datos
+            var seguroExistente = _context.Seguros.Find(codigo);
+            if (seguroExistente == null)
+            {
+                throw new System.Exception("El seguro no existe");
+            }
+
+            _context.Seguros.Remove(seguroExistente);
+            _context.SaveChanges();
+
+            return seguroExistente;
+        }
+
+        //Para asosciar seguros  a clientes
+
+        public Cliente AsociarSeguro(string cedula, int codigo)
+        {
+            // Verificamos que se encuentre el cliente en la base de datos
+            var clienteExistente = _context.Clientes
+                .Include(c => c.Seguros)
+                .FirstOrDefault(x => x.Cedula == cedula);
+
+            if (clienteExistente == null)
+            {
+                throw new System.Exception("El cliente no existe");
+            }
+
+            // Verificamos que se encuentre el seguro en la base de datos
+            var seguroExistente = _context.Seguros
+                .FirstOrDefault(x => x.Codigo == codigo);
+
+            if (seguroExistente == null)
+            {
+                throw new System.Exception("El seguro no existe");
+            }
+
+            // Asegúrate de que la relación muchos a muchos esté configurada correctamente en tu modelo de datos
+            // Agrega el seguro a la lista de seguros del cliente
+            clienteExistente.Seguros.Add(seguroExistente);
+
+            // Guarda los cambios en la base de datos
+            _context.SaveChanges();
+
+            return clienteExistente;
+        }
+
+
+        //Ingresi masivo de seguros via archivo csv
+        public object IngresarClientesCsv(IFormFile file)
+        {
+            //Verificamos que el archivo no sea nulo
+            if (file == null || file.Length == 0)
+            {
+                return new { mensaje = "No se ha seleccionado ningun archivo" };
+            }
+
+            //Verificamos que el archivo sea de tipo csv
+            if (!file.FileName.EndsWith(".csv"))
+            {
+                return new { mensaje = "El archivo no es de tipo csv" };
+            }
+
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+            {
+                var aseguradosDto = csv.GetRecords<Cliente>().ToList();
+                var asegurados = new List<Cliente>();
+
+                // Filtra los aseguradosDto que no existen en la base de datos por su cédula y del propio csv
+                var aseguradosNoDuplicados = aseguradosDto
+                    .Where(aseguradoDto =>
+                        !_context.Clientes.Any(a => a.Cedula == aseguradoDto.Cedula) &&
+                        !aseguradosDto.Any(s => s != aseguradoDto && s.Cedula == aseguradoDto.Cedula))
+                    .ToList();
+
+
+                _context.Clientes.AddRange(aseguradosNoDuplicados);
+                _context.SaveChanges();
+
+                return aseguradosNoDuplicados;
+            }
+
+
+        }
+
+        public object IngresarSegurosCsv(IFormFile file)
+        {
+            //Verificamos que el archivo no sea nulo
+            if (file == null || file.Length == 0)
+            {
+                return new { mensaje = "No se ha seleccionado ningun archivo" };
+            }
+
+            //Verificamos que el archivo sea de tipo csv
+            if (!file.FileName.EndsWith(".csv"))
+            {
+                return new { mensaje = "El archivo no es de tipo csv" };
+            }
+
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+            {
+                var segurosDto = csv.GetRecords<Seguro>().ToList();
+                var seguros = new List<Seguro>();
+
+                // Filtra los aseguradosDto que no existen en la base de datos por su cédula y del propio csv
+                var segurosNoDuplicados = segurosDto
+                        .Where(seguroDto => !_context.Seguros.Any(a => a.Codigo == seguroDto.Codigo) &&
+                                            !segurosDto.Any(s => s != seguroDto && s.Codigo == seguroDto.Codigo))
+                        .ToList();
+
+
+
+                _context.Seguros.AddRange(segurosNoDuplicados);
+                _context.SaveChanges();
+
+                return segurosNoDuplicados;
+            }
+        }
+
     }
 
 }

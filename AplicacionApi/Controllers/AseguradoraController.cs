@@ -120,5 +120,98 @@ namespace AplicacionApi.Controllers
         }
 
 
+        //Actualizar seguro
+
+        [HttpPut("ActualizarSeguro")]
+
+        public IActionResult Put(int codigo, SeguroDto seguro)
+        {
+            try
+            {
+                var retorno = this.iaseguradora.ActualizarSeguro(codigo, seguro);
+
+                return Ok(retorno);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        //Eliminar seguro
+
+        [HttpDelete("EliminarSeguro")]
+
+        public IActionResult Delete(int codigo)
+        {
+            try
+            {
+                var retorno = this.iaseguradora.EliminarSeguro(codigo);
+
+                return Ok(retorno);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+        //Asignar un seguro a un cliente
+
+        [HttpPost("AsociarSeguro")]
+
+        public IActionResult Post(string cedula, int codigo)
+        {
+            try
+            {
+                var retorno = this.iaseguradora.AsociarSeguro(cedula, codigo);
+
+                return Ok(retorno);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+
+        //Ingresar clientes via csv
+
+        [HttpPost("IngresarClientesCsv")]
+
+        public IActionResult Post(IFormFile file)
+        {
+            try
+            {
+                var retorno = this.iaseguradora.IngresarClientesCsv(file);
+
+                return Ok(retorno);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }   
+        }
+
+
+        //Ingresar seguros via csv
+
+        [HttpPost("IngresarSegurosCsv")]
+
+        public IActionResult PostSeguros(IFormFile file)
+        {
+            try
+            {
+                var retorno = this.iaseguradora.IngresarSegurosCsv(file);
+
+                return Ok(retorno);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
+
+
     }
 }
